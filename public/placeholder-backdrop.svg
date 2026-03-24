@@ -1,0 +1,9 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#14181c"/>
+  <rect x="440" y="260" width="400" height="200" rx="12" fill="#2c3440"/>
+  <circle cx="580" cy="320" r="25" fill="#456"/>
+  <path d="M520 380L580 320L640 380L700 320L760 380V420H520V380Z" fill="#456"/>
+  <rect x="540" y="480" width="200" height="12" rx="6" fill="#456"/>
+  <rect x="540" y="500" width="120" height="12" rx="6" fill="#456"/>
+  <text x="640" y="540" text-anchor="middle" fill="#9ab" font-family="Arial, sans-serif" font-size="18">Imagem de Fundo Indisponível</text>
+</svg>
