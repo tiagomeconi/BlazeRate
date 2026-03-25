@@ -573,6 +573,7 @@ const MovieDetails = () => {
     };
     fetchDetails();
     setCarouselIndex(0);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [id, type]);
 
   // close lightbox on Escape
@@ -604,7 +605,11 @@ const MovieDetails = () => {
   const releaseDate = details.release_date || details.first_air_date;
   const year        = releaseDate ? new Date(releaseDate).getFullYear() : 'N/A';
   const runtime     = details.runtime || (details.episode_run_time?.[0]);
-  const trailer     = details.videos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+  const videos      = details.videos?.results || [];
+  const trailer     =
+    videos.find(v => v.type === 'Trailer' && v.site === 'YouTube' && v.iso_639_1 === 'en') ||
+    videos.find(v => v.type === 'Trailer' && v.site === 'YouTube') ||
+    videos.find(v => v.site === 'YouTube');
   const cast        = details.credits?.cast?.slice(0, 18) || [];
   const backdrops   = details.images?.backdrops?.slice(0, 3) || [];
   const director    = details.credits?.crew?.find(c => c.job === 'Director');

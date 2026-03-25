@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { tmdbApi, getImageUrl, getBackdropUrl } from '../services/tmdbApi';
@@ -211,11 +211,15 @@ const HeroRating = styled.div`
    SECTIONS
 ══════════════════════════════════════════════════════════ */
 const Sections = styled.div`
-  padding: 2.5rem 0 3rem;
+  padding: 3rem 0 4rem;
 `;
 
 const Section = styled.section`
-  margin-bottom: 2.75rem;
+  margin-bottom: 0;
+  padding: 2rem 0;
+  border-top: 1px solid ${p => p.theme.colors.border}55;
+
+  &:first-child { border-top: none; }
 `;
 
 const SectionHeader = styled.div`
@@ -233,6 +237,19 @@ const SectionTitle = styled.h2`
   font-size: 1.15rem;
   font-weight: 700;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    background: ${p => p.theme.colors.primary};
+    flex-shrink: 0;
+  }
 `;
 
 const SectionRight = styled.div`
@@ -281,14 +298,39 @@ const ScrollRow = styled.div`
   display: flex;
   gap: 0.85rem;
   overflow-x: auto;
-  padding: 0.25rem 2.5rem 1rem;
+  overflow-y: visible;
+  padding: 0.5rem 2.5rem 1.5rem;
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
 
   &::-webkit-scrollbar { display: none; }
 
-  @media (max-width: 768px) { padding: 0.25rem 1.25rem 1rem; }
+  @media (max-width: 768px) { padding: 0.5rem 1.25rem 1.5rem; }
+`;
+
+const RowWrapper = styled.div`
+  position: relative;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 72px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, ${p => p.theme.colors.background} 0%, transparent 100%);
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, ${p => p.theme.colors.background} 0%, transparent 100%);
+  }
 `;
 
 /* ── loading / error ─────────────────────────────────────── */
@@ -309,6 +351,53 @@ const Spinner = styled.div`
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   @keyframes spin { to { transform: rotate(360deg); } }
+`;
+
+/* ── skeleton ─────────────────────────────────────────────── */
+const shimmer = keyframes`
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+`;
+
+const skeletonShine = (theme) => css`
+  background: linear-gradient(
+    90deg,
+    ${theme.colors.surface} 25%,
+    ${theme.colors.surfaceHover} 50%,
+    ${theme.colors.surface} 75%
+  );
+  background-size: 1200px 100%;
+  animation: ${shimmer} 1.6s infinite linear;
+`;
+
+const SkeletonCard = styled.div`
+  ${p => skeletonShine(p.theme)}
+  width: 150px;
+  height: 225px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  @media (max-width: 768px) { width: 130px; height: 195px; }
+`;
+
+const SkeletonHero = styled.div`
+  ${p => skeletonShine(p.theme)}
+  height: 68vh;
+  min-height: 440px;
+`;
+
+const SkeletonSectionTitle = styled.div`
+  ${p => skeletonShine(p.theme)}
+  width: 160px;
+  height: 20px;
+  border-radius: 6px;
+`;
+
+const SkeletonRow = styled.div`
+  display: flex;
+  gap: 0.85rem;
+  padding: 0.25rem 2.5rem 1rem;
+  overflow: hidden;
+  @media (max-width: 768px) { padding: 0.25rem 1.25rem 1rem; }
 `;
 
 /* ════════════════════════════════════════════════════════════
@@ -404,9 +493,19 @@ const Home = () => {
   if (loading) {
     return (
       <Page theme={theme}>
-        <LoadingWrap theme={theme}>
-          <Spinner theme={theme} /> Carregando...
-        </LoadingWrap>
+        <SkeletonHero theme={theme} />
+        <Sections>
+          {[...Array(4)].map((_, s) => (
+            <Section key={s} theme={theme}>
+              <SectionHeader>
+                <SkeletonSectionTitle theme={theme} />
+              </SectionHeader>
+              <SkeletonRow>
+                {[...Array(8)].map((_, i) => <SkeletonCard key={i} theme={theme} />)}
+              </SkeletonRow>
+            </Section>
+          ))}
+        </Sections>
       </Page>
     );
   }
@@ -534,7 +633,7 @@ const Home = () => {
 
 /* ── MovieRow sub-component ─────────────────────────────── */
 const MovieRow = ({ title, movies, type, rowRef, onScroll, theme }) => (
-  <Section>
+  <Section theme={theme}>
     <SectionHeader>
       <SectionTitle theme={theme}>{title}</SectionTitle>
       <SectionRight>
@@ -547,15 +646,17 @@ const MovieRow = ({ title, movies, type, rowRef, onScroll, theme }) => (
       </SectionRight>
     </SectionHeader>
 
-    <ScrollRow ref={rowRef}>
-      {movies.map(movie => (
-        <MovieCard
-          key={movie.id}
-          movie={movie}
-          type={movie.media_type || type || 'movie'}
-        />
-      ))}
-    </ScrollRow>
+    <RowWrapper theme={theme}>
+      <ScrollRow ref={rowRef}>
+        {movies.map(movie => (
+          <MovieCard
+            key={movie.id}
+            movie={movie}
+            type={movie.media_type || type || 'movie'}
+          />
+        ))}
+      </ScrollRow>
+    </RowWrapper>
   </Section>
 );
 

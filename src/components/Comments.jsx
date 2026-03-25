@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { addComment, getMovieComments } from '../services/firebase';
+import { addComment, getMovieComments } from '../services/supabase';
 
 const CommentsContainer = styled.div`
   display: flex;
@@ -150,7 +150,7 @@ const LoadingSpinner = styled.div`
   }
 `;
 
-const Comments = ({ movieId, movieTitle }) => {
+const Comments = ({ movieId, movieType, movieTitle }) => {
   const { currentUser } = useAuth();
   const { theme } = useTheme();
   const [comments, setComments] = useState([]);
@@ -167,7 +167,7 @@ const Comments = ({ movieId, movieTitle }) => {
   const loadComments = async () => {
     try {
       setLoading(true);
-      const movieComments = await getMovieComments(movieId);
+      const movieComments = await getMovieComments(movieId, movieType);
       setComments(movieComments);
     } catch (error) {
       console.error('Error loading comments:', error);
@@ -182,7 +182,14 @@ const Comments = ({ movieId, movieTitle }) => {
     
     try {
       setSubmitting(true);
-      await addComment(currentUser.uid, movieId, newComment.trim());
+      await addComment(
+        currentUser.uid,
+        movieId,
+        movieType,
+        newComment.trim(),
+        currentUser.displayName,
+        currentUser.photoURL
+      );
       setNewComment('');
       // Reload comments to show the new one
       await loadComments();
@@ -195,13 +202,9 @@ const Comments = ({ movieId, movieTitle }) => {
 
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    
-    // Handle Firestore timestamp
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' }).format(
-      Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24)),
-      'day'
-    );
+    const date = new Date(timestamp);
+    const diff = Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24));
+    return new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' }).format(diff, 'day');
   };
 
   return (
@@ -248,12 +251,12 @@ const Comments = ({ movieId, movieTitle }) => {
               <CommentItem key={comment.id} theme={theme}>
                 <CommentHeader>
                   <CommentAvatar
-                    src={comment.userPhotoURL || '/placeholder-avatar.svg'}
-                    alt={comment.userDisplayName || 'Usuário'}
+                    src={comment.user_avatar || '/placeholder-avatar.svg'}
+                    alt={comment.user_name || 'Usuário'}
                     theme={theme}
                   />
                   <CommentAuthor theme={theme}>
-                    {comment.userDisplayName || 'Usuário Anônimo'}
+                    {comment.user_name || 'Usuário Anônimo'}
                   </CommentAuthor>
                   <CommentDate theme={theme}>
                     {formatDate(comment.createdAt)}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { logout } from '../services/firebase';
+import { logout } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -49,14 +50,35 @@ const DropdownMenu = styled.div`
   right: 0;
   background: ${props => props.theme.colors.surface};
   border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  box-shadow: ${props => props.theme.shadows.large};
-  min-width: 200px;
+  border-radius: 12px;
+  box-shadow: ${props => props.theme.shadows.large}, 0 16px 48px rgba(0,0,0,0.25);
+  min-width: 210px;
   z-index: 1000;
   overflow: hidden;
-  margin-top: 0.5rem;
-  
-  ${props => !props.isOpen && 'display: none;'}
+  margin-top: 0.6rem;
+  transform-origin: top right;
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.18s ease;
+
+  opacity: ${props => props.$open ? 1 : 0};
+  transform: ${props => props.$open ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.96)'};
+  visibility: ${props => props.$open ? 'visible' : 'hidden'};
+  pointer-events: ${props => props.$open ? 'all' : 'none'};
+`;
+
+const DropdownLink = styled(Link)`
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  text-align: left;
+  color: ${props => props.theme.colors.text};
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover { background: ${props => props.theme.colors.surfaceHover}; }
 `;
 
 const DropdownItem = styled.button`
@@ -154,7 +176,7 @@ const UserProfile = () => {
         </UserName>
       </ProfileButton>
       
-      <DropdownMenu isOpen={isDropdownOpen} theme={theme}>
+      <DropdownMenu $open={isDropdownOpen} theme={theme}>
         <UserInfo theme={theme}>
           <div style={{ fontWeight: '500' }}>
             {currentUser.displayName || 'Usuário'}
@@ -164,6 +186,11 @@ const UserProfile = () => {
           </UserEmail>
         </UserInfo>
         
+        <DropdownLink to="/profile" theme={theme} onClick={() => setIsDropdownOpen(false)}>
+          <span className="material-symbols-rounded" style={{ fontSize: 16 }}>manage_accounts</span>
+          Configurações
+        </DropdownLink>
+
         <ThemeToggle onClick={toggleTheme} theme={theme}>
           <span className="material-symbols-rounded" style={{ fontSize: 16 }}>
             {isDark ? 'light_mode' : 'dark_mode'}

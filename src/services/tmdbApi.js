@@ -48,6 +48,7 @@ export const tmdbApi = {
     params: {
       append_to_response: 'credits,videos,recommendations,images',
       include_image_language: 'null',
+      include_video_language: 'en,null',
     }
   }),
 
@@ -56,6 +57,7 @@ export const tmdbApi = {
     params: {
       append_to_response: 'credits,videos,recommendations,images',
       include_image_language: 'null',
+      include_video_language: 'en,null',
     }
   }),
   
@@ -72,6 +74,12 @@ export const tmdbApi = {
   getPersonDetails: (id) => api.get(`/person/${id}`, {
     params: { append_to_response: 'movie_credits,tv_credits' }
   }),
+
+  // Vídeos (trailers) de um filme ou série
+  getVideos: (id, type = 'movie') => api.get(`/${type}/${id}/videos`),
+
+  // Pessoas populares (para avatares)
+  getPopularPersons: (page = 1) => api.get('/person/popular', { params: { page } }),
 };
 
 // Utilitários para URLs de imagens

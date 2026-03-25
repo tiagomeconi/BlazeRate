@@ -1,71 +1,44 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { signInWithGoogle, signInWithEmail, registerWithEmail } from '../services/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import Icon from './Icon';
+import Icon from '../components/Icon';
 
 const fadeIn = keyframes`
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 `;
 
-const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(24px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-`;
-
-const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(5px);
-  z-index: 1000;
+const Page = styled.div`
+  min-height: 100vh;
+  background: ${p => p.theme.colors.background};
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  animation: ${fadeIn} 0.2s ease;
+  padding: 2rem 1rem;
 `;
 
 const Card = styled.div`
   background: ${p => p.theme.colors.surface};
   border: 1px solid ${p => p.theme.colors.border};
   border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.55);
+  padding: 2.5rem 2rem;
+  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.45);
   width: 100%;
   max-width: 420px;
-  position: relative;
-  animation: ${slideUp} 0.25s ease;
-`;
-
-const CloseBtn = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: transparent;
-  border: none;
-  color: ${p => p.theme.colors.textMuted};
-  cursor: pointer;
-  padding: 0.3rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s, background 0.2s;
-  &:hover {
-    color: ${p => p.theme.colors.text};
-    background: ${p => p.theme.colors.surfaceHover};
-  }
+  animation: ${fadeIn} 0.3s ease;
 `;
 
 const LogoArea = styled.div`
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 `;
 
 const LogoImg = styled.img`
-  height: 48px;
+  height: 52px;
   width: auto;
   object-fit: contain;
 `;
@@ -226,15 +199,6 @@ const GoogleBtn = styled.button`
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `;
 
-const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24">
-    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-  </svg>
-);
-
 const GlobalError = styled.div`
   padding: 0.7rem 0.9rem;
   background: ${p => p.theme.colors.error}18;
@@ -255,6 +219,15 @@ const Spinner = styled.div`
   @keyframes spin { to { transform: rotate(360deg); } }
 `;
 
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
+
 const parseSupabaseError = (message = '') => {
   const m = message.toLowerCase();
   if (m.includes('already registered') || m.includes('already been registered')) return 'Este e-mail já está em uso.';
@@ -267,9 +240,12 @@ const parseSupabaseError = (message = '') => {
   return 'Ocorreu um erro. Tente novamente.';
 };
 
-const LoginModal = ({ onClose }) => {
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const { theme } = useTheme();
-  const [tab, setTab] = useState('login');
+
+  const [tab, setTab]           = useState('login');
   const [name, setName]         = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -281,11 +257,10 @@ const LoginModal = ({ onClose }) => {
   const [globalError, setGlobalError]     = useState('');
   const [fieldErrors, setFieldErrors]     = useState({});
 
+  // Redirect if already logged in
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    if (currentUser) navigate('/', { replace: true });
+  }, [currentUser, navigate]);
 
   const switchTab = (t) => { setTab(t); setGlobalError(''); setFieldErrors({}); };
 
@@ -310,7 +285,7 @@ const LoginModal = ({ onClose }) => {
       setLoading(true);
       if (tab === 'login') await signInWithEmail(email, password);
       else await registerWithEmail(name.trim(), email, password);
-      onClose();
+      navigate('/', { replace: true });
     } catch (err) {
       setGlobalError(parseSupabaseError(err.message));
     } finally {
@@ -323,11 +298,8 @@ const LoginModal = ({ onClose }) => {
     try {
       setGoogleLoading(true);
       await signInWithGoogle();
-      // Google auth redirects the page — onClose only runs if it doesn't redirect
-      onClose();
     } catch (err) {
       setGlobalError(parseSupabaseError(err.message));
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -335,12 +307,8 @@ const LoginModal = ({ onClose }) => {
   const isLogin = tab === 'login';
 
   return (
-    <Overlay onClick={onClose}>
-      <Card theme={theme} onClick={(e) => e.stopPropagation()}>
-        <CloseBtn theme={theme} onClick={onClose} aria-label="Fechar">
-          <Icon name="close" size={20} />
-        </CloseBtn>
-
+    <Page theme={theme}>
+      <Card theme={theme}>
         <LogoArea>
           <LogoImg src="/Blaze-Rate-Logo.png" alt="BlazeRate" />
         </LogoArea>
@@ -409,11 +377,11 @@ const LoginModal = ({ onClose }) => {
 
         <GoogleBtn onClick={handleGoogle} disabled={loading || googleLoading} theme={theme}>
           <GoogleIcon />
-          {googleLoading ? 'Conectando...' : 'Google'}
+          {googleLoading ? 'Conectando...' : 'Entrar com Google'}
         </GoogleBtn>
       </Card>
-    </Overlay>
+    </Page>
   );
 };
 
-export default LoginModal;
+export default LoginPage;

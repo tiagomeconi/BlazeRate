@@ -4,7 +4,6 @@ import styled, { keyframes, css } from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import UserProfile from './UserProfile';
-import LoginModal from './LoginModal';
 import ThemeToggle from './ThemeToggle';
 import Icon from './Icon';
 
@@ -14,15 +13,20 @@ const slideDown = keyframes`
 `;
 
 const HeaderContainer = styled.header`
-  background: ${p => p.$scrolled ? p.theme.colors.surface : 'transparent'};
-  backdrop-filter: ${p => p.$scrolled ? 'blur(12px)' : 'none'};
-  border-bottom: 1px solid ${p => p.$scrolled ? p.theme.colors.border : 'transparent'};
+  background: ${p => p.theme.name === 'dark'
+    ? p.$scrolled ? 'rgba(15, 15, 15, 0.85)' : 'rgba(15, 15, 15, 0.45)'
+    : p.$scrolled ? 'rgba(248, 249, 250, 0.88)' : 'rgba(248, 249, 250, 0.55)'};
+  backdrop-filter: blur(${p => p.$scrolled ? '18px' : '10px'});
+  -webkit-backdrop-filter: blur(${p => p.$scrolled ? '18px' : '10px'});
+  border-bottom: 1px solid ${p => p.theme.name === 'dark'
+    ? p.$scrolled ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'
+    : p.$scrolled ? 'rgba(0,0,0,0.10)' : 'rgba(0,0,0,0.05)'};
   box-shadow: ${p => p.$scrolled ? p.theme.shadows.medium : 'none'};
   padding: 0 2rem;
   position: sticky;
   top: 0;
   z-index: 200;
-  transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: background 0.35s ease, backdrop-filter 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
 
   @media (max-width: 768px) { padding: 0 1rem; }
 `;
@@ -259,7 +263,6 @@ const Header = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [mobileSearch, setMobileSearch] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -270,7 +273,6 @@ const Header = () => {
   const inputRef = useRef(null);
 
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
-  useEffect(() => { if (currentUser) setShowLogin(false); }, [currentUser]);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -338,7 +340,7 @@ const Header = () => {
             {currentUser ? (
               <UserProfile />
             ) : (
-              <LoginButton theme={theme} onClick={() => setShowLogin(true)}>
+              <LoginButton as={Link} to="/login" theme={theme}>
                 Entrar
               </LoginButton>
             )}
@@ -370,9 +372,6 @@ const Header = () => {
         </MobileSearchForm>
       </MobileDrawer>
 
-      {showLogin && !currentUser && (
-        <LoginModal onClose={() => setShowLogin(false)} />
-      )}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChange, createUserDocument } from '../services/firebase';
+import { onAuthStateChange, upsertProfile } from '../services/supabase';
 
 const AuthContext = createContext();
 
@@ -19,15 +19,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChange(async (user) => {
       if (user) {
-        setCurrentUser(user);
-        // Create user document if it doesn't exist
-        await createUserDocument(user);
-        setUserProfile({
-          uid: user.uid,
-          displayName: user.displayName,
+        await upsertProfile(user);
+        // Normalize Supabase user to match expected shape across components
+        const normalized = {
+          uid: user.id,
+          id: user.id,
           email: user.email,
-          photoURL: user.photoURL
-        });
+          displayName:
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split('@')[0],
+          photoURL:
+            user.user_metadata?.avatar_url ||
+            user.user_metadata?.picture ||
+            null,
+        };
+        setCurrentUser(normalized);
+        setUserProfile(normalized);
       } else {
         setCurrentUser(null);
         setUserProfile(null);
